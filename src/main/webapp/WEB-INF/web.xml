@@ -6,7 +6,7 @@
 	<display-name>Archetype Created Web Application</display-name>
 	<servlet>
 		<servlet-name>jersey-serlvet</servlet-name>
-		<servlet-class>
+		<servlet-class>	
 			com.sun.jersey.spi.container.servlet.ServletContainer
 		</servlet-class>
 		<init-param>
@@ -19,13 +19,14 @@
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-
-	<servlet-mapping>
+	<servlet-mapping id="ServletMapping_1521709802737">
 		<servlet-name>jersey-serlvet</servlet-name>
 		<url-pattern>/expense/*</url-pattern>
 	</servlet-mapping>
-
-
-
+	<listener>
+		<listener-class>
+			com.expense.service.ServletContextClass
+		</listener-class>
+	</listener>
 </web-app>
 

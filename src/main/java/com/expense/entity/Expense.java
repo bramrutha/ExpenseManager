@@ -2,39 +2,59 @@ package com.expense.entity;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Expense {
 	
-	private long id;
+	private int userId;
+	private int expenseId;
 	private String name;
 	private String category;
-	private double Amount;
+	private double amount;
+	private String date;
 	
 	public Expense() {}
 	/**
-	 * @param id
+	 * @param expenseId
 	 * @param name
 	 * @param category
 	 * @param amount
 	 */
-	public Expense(long id, String name, String category, double amount) {
+	public Expense(int userId,int expenseId, String name, String category, double amount,String date) {
 		super();
-		this.id = id;
+		this.userId = userId;
+		this.expenseId = expenseId;
 		this.name = name;
 		this.category = category;
-		Amount = amount;
+		this.amount = amount;
+		this.date = date;
+		
+	}
+	
+	
+	/**
+	 * @return the userId
+	 */
+	public int getUserId() {
+		return userId;
+	}
+	/**
+	 * @param userId the userId to set
+	 */
+	public void setUserId(int userId) {
+		this.userId = userId;
 	}
 	/**
 	 * @return the id
 	 */
-	public long getId() {
-		return id;
+	public int getexpenseId() {
+		return expenseId;
 	}
 	/**
 	 * @param id the id to set
 	 */
-	public void setId(long id) {
-		this.id = id;
+	public void setexpenseId(int expenseId) {
+		this.expenseId = expenseId;
 	}
 	/**
 	 * @return the name
@@ -64,16 +84,24 @@ public class Expense {
 	 * @return the amount
 	 */
 	public double getAmount() {
-		return Amount;
+		return amount;
 	}
 	/**
 	 * @param amount the amount to set
 	 */
 	public void setAmount(double amount) {
-		Amount = amount;
+		this.amount = amount;
 	}
-	
-	
-	
-	
+	/**
+	 * @return the date
+	 */
+	public String getDate() {
+		return date;
+	}
+	/**
+	 * @param date the date to set
+	 */
+	public void setDate(String date) {
+		this.date = date;
+	}	
 }
