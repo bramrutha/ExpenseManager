@@ -28,14 +28,7 @@ public class UserService {
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-		} finally {
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
-		}
+		} 
 		return newUser;
 	}
 
@@ -64,14 +57,7 @@ public class UserService {
 
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-		} finally {
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
-		}
+		} 
 		return userList;
 
 	}

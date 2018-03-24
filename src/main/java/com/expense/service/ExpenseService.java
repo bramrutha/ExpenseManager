@@ -2,22 +2,35 @@ package com.expense.service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.expense.entity.Expense;
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
 import com.expense.database.DataBaseConnection;
 
 
 
 public class ExpenseService {	
 	
+	private static List<Expense> allList = new ArrayList<Expense>();
+		
 	public static Expense addExpense(int userId,Expense newExpense) throws SQLException, ClassNotFoundException {
 	
-    Connection dbConnection = null;
+	Connection dbConnection = null;
 	PreparedStatement preparedStatement = null;
 		
 	String insertSql = "INSERT INTO Expense"
 		              + "(id,userId,name,category,amount,date) VALUES"
-	                  + "(?,?,?,?)";
+	                  + "(?,?,?,?,?,?)";
 	try {
 		
 		dbConnection = DataBaseConnection.getConnection();	
@@ -26,9 +39,8 @@ public class ExpenseService {
 		preparedStatement.setInt(2, newExpense.getUserId());
 		preparedStatement.setString(3, newExpense.getName());
 		preparedStatement.setString(4, newExpense.getCategory());
-		preparedStatement.setString(5, newExpense.getName());
-		preparedStatement.setDouble(6, newExpense.getAmount());
-		preparedStatement.setString(7, newExpense.getDate());
+		preparedStatement.setDouble(5, newExpense.getAmount());
+		preparedStatement.setString(6, newExpense.getDate());
 		
 		preparedStatement.executeUpdate();
 		
@@ -37,16 +49,187 @@ public class ExpenseService {
 	   catch(SQLException e) {
 		   System.out.println(e.getMessage()); 
 	   }
-	  finally {
-		  if (preparedStatement != null) {
-			  preparedStatement.close();
-	      }
-		  if (dbConnection != null){
-		      dbConnection.close();
-	      }
-	  }
 	  return newExpense;
        
+	}
+
+	public static List<Expense> getAll(int userId) throws SQLException, ClassNotFoundException {
+		Connection dbConnection = null;
+		PreparedStatement preparedStatement = null;
+		List<Expense> expenseList = new ArrayList<Expense>();
+
+		String selectSql = "SELECT * FROM EXPENSE WHERE USERID = ?";
+		
+
+		try {
+
+			dbConnection = DataBaseConnection.getConnection();
+			preparedStatement = dbConnection.prepareStatement(selectSql);
+			preparedStatement.setInt(1, userId);
+			ResultSet rs = preparedStatement.executeQuery();
+
+
+			while (rs.next()) {
+				Expense s1 = new Expense();
+				s1.setexpenseId(rs.getInt("ID"));
+				s1.setUserId(rs.getInt("USERID"));
+				s1.setName(rs.getString("NAME"));
+				s1.setCategory(rs.getString("CATEGORY"));
+				s1.setAmount(rs.getDouble("AMOUNT"));
+				s1.setDate(rs.getString("DATE"));
+				expenseList.add(s1);
+			}
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} 
+		return expenseList;
+	}
+	
+	
+	public static Map<String, Double> getDayCatExpense(int userId, String fromDate, String toDate) throws ClassNotFoundException, SQLException, java.text.ParseException {
+		
+		Map<String,Double> categoryMap = new HashMap<String,Double>();
+		
+		Date fromDate1 = null;
+		Date toDate1 = null;
+		
+		allList = getAll(userId);
+		Double foodExpense = 0.00;
+		Double shopExpense = 0.00;
+		Double healthExpense = 0.00;
+		Double fuelExpense = 0.00;
+		Double enterExpense = 0.00;
+		Double groceryExpense = 0.00;
+		Double otherExpense = 0.00;
+		
+		
+		if (fromDate != null) {
+		   fromDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
+		   Calendar cal1 = Calendar.getInstance();
+		   cal1.setTime(fromDate1);
+		}   
+		
+		if(toDate != null) {
+		   toDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(toDate);
+		   Calendar cal2 = Calendar.getInstance();
+		   cal2.setTime(toDate1);
+		}
+
+		
+	    for(Expense exp : allList)
+		{
+	    	Date expDate = new SimpleDateFormat("yyyy-MM-dd").parse(exp.getDate());	
+		    Calendar cal3 = Calendar.getInstance();
+		    cal3.setTime(expDate);
+		       
+		    if (toDate != null) {
+		      if (((expDate.equals(fromDate1)) || (expDate.after(fromDate1)))
+		    	   	    &&
+		    	     ((expDate.equals(toDate1)) || (expDate.before(toDate1)))) {	       
+	             if((exp.getCategory()).equalsIgnoreCase("FOOD"))
+	        	   foodExpense = foodExpense + exp.getAmount();
+	             else if((exp.getCategory()).equalsIgnoreCase("SHOPPING"))
+	        	   shopExpense = shopExpense + exp.getAmount();
+	             else if((exp.getCategory()).equalsIgnoreCase("HEALTH"))
+	        	   healthExpense = healthExpense + exp.getAmount();
+	             else if((exp.getCategory()).equalsIgnoreCase("FUEL"))
+	        	   fuelExpense = fuelExpense + exp.getAmount();
+	             else if((exp.getCategory()).equalsIgnoreCase("ENTERTAINMET"))
+	        	   enterExpense = enterExpense + exp.getAmount();
+	             else if((exp.getCategory()).equalsIgnoreCase("GROCERY"))
+	        	   groceryExpense = groceryExpense + exp.getAmount();
+	             else
+	        	   otherExpense = otherExpense + exp.getAmount();
+		         }
+		    }  
+		    else {
+		       if (expDate.equals(fromDate1)) {
+		    	   if((exp.getCategory()).equalsIgnoreCase("FOOD"))
+		        	   foodExpense = foodExpense + exp.getAmount();
+		             else if((exp.getCategory()).equalsIgnoreCase("SHOPPING"))
+		        	   shopExpense = shopExpense + exp.getAmount();
+		             else if((exp.getCategory()).equalsIgnoreCase("HEALTH"))
+		        	   healthExpense = healthExpense + exp.getAmount();
+		             else if((exp.getCategory()).equalsIgnoreCase("FUEL"))
+		        	   fuelExpense = fuelExpense + exp.getAmount();
+		             else if((exp.getCategory()).equalsIgnoreCase("ENTERTAINMET"))
+		        	   enterExpense = enterExpense + exp.getAmount();
+		             else if((exp.getCategory()).equalsIgnoreCase("GROCERY"))
+		        	   groceryExpense = groceryExpense + exp.getAmount();
+		             else
+		        	   otherExpense = otherExpense + exp.getAmount();  
+		       }
+		    		
+		   }    
+		}
+	    categoryMap.put("FOOD", foodExpense);
+	    categoryMap.put("SHOPPING", shopExpense);
+	    categoryMap.put("HEALTH", healthExpense);
+	    categoryMap.put("FUEL", fuelExpense);
+	    categoryMap.put("ENTERTAINMENT", enterExpense);
+	    categoryMap.put("GROCERY", groceryExpense);
+	    categoryMap.put("OTHER", otherExpense);
+		return categoryMap;
+	}
+
+	public static List<Expense> getRangeExpense(int userId, String fromDate, String toDate) throws ClassNotFoundException, SQLException, java.text.ParseException {
+		List<Expense> dateList = new ArrayList<Expense>();
+		Date fromDate1 = null;
+		Date toDate1 = null;
+		
+		
+		
+		if (fromDate != null) {
+		   fromDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
+		   Calendar cal1 = Calendar.getInstance();
+		   cal1.setTime(fromDate1);
+		}   
+		
+		if(toDate != null) {
+		   toDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(toDate);
+		   Calendar cal2 = Calendar.getInstance();
+		   cal2.setTime(toDate1);
+		}
+        
+		allList = getAll(userId);
+	    for(Expense exp : allList)
+		{
+	       Date expDate = new SimpleDateFormat("yyyy-MM-dd").parse(exp.getDate());	
+	       Calendar cal3 = Calendar.getInstance();
+	       cal3.setTime(expDate);
+	       
+	       if (toDate != null) {
+	         if (((expDate.equals(fromDate1)) || (expDate.after(fromDate1)))
+	    	   	    &&
+	    	     ((expDate.equals(toDate1)) || (expDate.before(toDate1))))	    
+	              
+	        	 dateList.add(exp);
+	       }
+	       else {
+	    	 if (expDate.equals(fromDate1))
+	    		 dateList.add(exp);
+	       }
+        } 
+		
+		return dateList;
+	}
+}	
+	 
+	/*public static boolean validateDate(String strdate) throws java.text.ParseException {
+
+		SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd");
+		sdfrmt.setLenient(false);
+		try {
+			Date javaDate = sdfrmt.parse(strdate);
+			System.out.println("strdate : " + strdate);
+			System.out.println("Date : " + sdfrmt.parse(strdate));
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 }	
 	
@@ -62,32 +245,9 @@ public class ExpenseService {
 	
 	
 
-	/*public static Expense addExpense(long userId,Expense newExpense) {
-		
+	
 
-			 if (expenseMap.get(userId)== null) {
-			    expenseMap.put(userId,new ArrayList<Expense>());
-			 }
-			 expenseMap.get(userId).add(newExpense);
-			 return newExpense;
 
-	}
-
-	public static List<Expense> getAll(long userId) {
-		return expenseMap.get(userId);
-	}
-
-	public static Expense update(long userId,Expense expense) {
-		// TODO Auto-generated method stub
-		
-		
-		 expenseMap.put(userId(), exp);	
-		 return expenseMap.get(exp.getUserId());
-		}	
-		else
-			 return exp;
-		
-	}
 
 	public static Expense getById(long gid) {
 		return expenseMap.get(gid);
@@ -106,21 +266,7 @@ public class ExpenseService {
 	
 	
 
-	public static boolean validateDate(String strdate) {
 
-		SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd");
-		sdfrmt.setLenient(false);
-		try {
-			Date javaDate = sdfrmt.parse(strdate);
-			System.out.println("strdate : " + strdate);
-			System.out.println("Date : " + sdfrmt.parse(strdate));
-
-		} catch (ParseException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
 
 	public static List<Expense> getByuserId(long gid) {
 		// TODO Auto-generated method stub

@@ -13,7 +13,7 @@ public class DataBaseConnection {
 
 		if (connection == null) {
 			Class.forName("org.sqlite.JDBC");
-			connection = DriverManager.getConnection("jdbc:sqlite:E:/chinook.db");
+			connection = DriverManager.getConnection("jdbc:sqlite:E:/chinook.sqlite");
 			System.out.println("Connected to expense database");
 			return connection;
 		}
