@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -60,29 +61,27 @@ public class ExpenseController {
 		return ExpenseService.getDayCatExpense(userId,fromDate,toDate);
 	}
 	
-  
-	
-/*	
+  	
     @PUT
 	@Path("/update/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Expense update(@PathParam("id") long userId, Expense expense) {
+	public Expense update(@PathParam("id") int userId, Expense expense ) throws ClassNotFoundException{
 		return ExpenseService.update(userId,expense);
 	}
-}
-	/*
-	 * 
+
+
 	@DELETE
 	@Path("/delete/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON) 
-	public void delete(@PathParam("id") long id) {
-		ExpenseService.delete(id);
-		
+	public void delete(@PathParam("id") int expenseId) throws ClassNotFoundException {
+		ExpenseService.delete(expenseId);
 	}
-	}
+}
+
 	
-	*/
+	
 	
 	
 	

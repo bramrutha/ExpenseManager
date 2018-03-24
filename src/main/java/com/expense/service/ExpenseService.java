@@ -44,7 +44,7 @@ public class ExpenseService {
 		
 		preparedStatement.executeUpdate();
 		
-		System.out.println("Record is inserted into DBUSER table!");
+		System.out.println("Record is inserted into EXPENSE table!");
 	}
 	   catch(SQLException e) {
 		   System.out.println(e.getMessage()); 
@@ -214,9 +214,76 @@ public class ExpenseService {
 		
 		return dateList;
 	}
+	
+	public static Expense update(int userId,Expense expense) throws ClassNotFoundException {
+		
+		Connection dbConnection = null;
+		PreparedStatement preparedStatement = null;
+		
+		String updateSql = "UPDATE Expense SET name = ?,category =?,amount = ?,date = ?"
+			              + "WHERE USERID = ? AND ID =?";
+		                  
+		try {
+			
+			dbConnection = DataBaseConnection.getConnection();	
+			preparedStatement = dbConnection.prepareStatement(updateSql);
+	        preparedStatement.setString(1, expense.getName());
+			preparedStatement.setString(2, expense.getCategory());
+			preparedStatement.setDouble(3, expense.getAmount());
+			preparedStatement.setString(4, expense.getDate());
+			preparedStatement.setInt(5, expense.getUserId());
+			preparedStatement.setInt(6, expense.getexpenseId());
+			
+			preparedStatement.executeUpdate();
+			
+			System.out.println("Record is updated into EXPENSE table!");
+		}
+		   catch(SQLException e) {
+			   System.out.println(e.getMessage()); 
+		   }
+		  return expense;
+	       
+		}
+
+	public static void delete(int expenseId) throws ClassNotFoundException {
+		Connection dbConnection = null;
+		PreparedStatement preparedStatement = null;
+		
+		String deleteSql = "DELETE FROM EXPENSE WHERE ID = ?";
+			             		                  
+		try {
+			
+			dbConnection = DataBaseConnection.getConnection();
+			preparedStatement = dbConnection.prepareStatement(deleteSql);
+			preparedStatement.setInt(1, expenseId);
+			
+			preparedStatement.executeUpdate();
+			
+			System.out.println("Record is deleted from EXPENSE table!");
+		}
+		   catch(SQLException e) {
+			   System.out.println(e.getMessage()); 
+		   }
+		 	
+	}
+
+		
 }	
 	 
-	/*public static boolean validateDate(String strdate) throws java.text.ParseException {
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*public static boolean validateDate(String strdate) throws java.text.ParseException {
 
 		SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd");
 		sdfrmt.setLenient(false);
@@ -239,42 +306,6 @@ public class ExpenseService {
 	
 	
 	
-	
-//	private static Map<Long,List<Expense>> expenseMap = new HashMap<Long,List<Expense>>();
-	
-	
-	
-
-	
-
-
-
-	public static Expense getById(long gid) {
-		return expenseMap.get(gid);
-
-	}
-	
-	public static Expense getByuserId(long gid) {
-		return expenseMap.get(gid);
-
-	}
-
-	public static void delete(long id) {
-		// TODO Auto-generated method stub
-		expenseMap.remove(id);
-	}
-	
-	
-
-
-
-	public static List<Expense> getByuserId(long gid) {
-		// TODO Auto-generated method stub
-		Collection<Expense> c = expenseMap.values();
-		Map<Long,List<Expense>> expenseList = new HashMap<Long,List<Expense>>();
-		expenseList.addAll(c);
-		return expenseList;
-	} 
 	
 }
 
