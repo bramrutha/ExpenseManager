@@ -10,10 +10,16 @@ import java.util.List;
 import com.expense.database.DataBaseConnection;
 import com.expense.entity.User;
 
-public class UserService {
+public class UserService  {
+	
+	public static void displayName(String userName) {
+		
+		System.out.println("Hello "+ userName );
+	}
 
 	public static User addUser(User newUser) throws SQLException, ClassNotFoundException {
-
+		
+		displayName(newUser.getUserName());
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
 

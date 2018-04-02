@@ -4,9 +4,8 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class Expense {
+public class Expense extends User{
 	
-	private int userId;
 	private int expenseId;
 	private String name;
 	private String category;
@@ -20,9 +19,8 @@ public class Expense {
 	 * @param category
 	 * @param amount
 	 */
-	public Expense(int userId,int expenseId, String name, String category, double amount,String date) {
+	public Expense(int expenseId, String name, String category, double amount,String date) {
 		super();
-		this.userId = userId;
 		this.expenseId = expenseId;
 		this.name = name;
 		this.category = category;
@@ -32,18 +30,6 @@ public class Expense {
 	}
 	
 	
-	/**
-	 * @return the userId
-	 */
-	public int getUserId() {
-		return userId;
-	}
-	/**
-	 * @param userId the userId to set
-	 */
-	public void setUserId(int userId) {
-		this.userId = userId;
-	}
 	/**
 	 * @return the id
 	 */
