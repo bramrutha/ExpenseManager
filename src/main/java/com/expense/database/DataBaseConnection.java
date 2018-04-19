@@ -1,4 +1,4 @@
-	package com.expense.database;
+package com.expense.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -9,31 +9,32 @@ public class DataBaseConnection {
 
 	private static Connection connection = null;
 
-	public static Connection getConnection() throws ClassNotFoundException, SQLException {
+	public static Connection getConnection() {
 
-		if (connection == null) {
-			Class.forName("org.sqlite.JDBC");
-			connection = DriverManager.getConnection("jdbc:sqlite:E:/chinook.sqlite");
-			System.out.println("Connected to expense database");
+		try {
+			if (connection == null) {
+				Class.forName("org.sqlite.JDBC");
+				connection = DriverManager.getConnection("jdbc:sqlite:E:/chinook.sqlite");
+				System.out.println("Connected to expense database");
+				return connection;
+			}
 			return connection;
+		} catch (SQLException exception) {
+			exception.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
-		return connection;
+		return null;
+
 	}
 
 	public static void initializeDatabase() throws ClassNotFoundException, SQLException {
 
-		String createUserTable = "CREATE TABLE IF NOT EXISTS USER (\n" 
-				+ "	id integer PRIMARY KEY,\n" 
-				+ "	name text\n"
+		String createUserTable = "CREATE TABLE IF NOT EXISTS USER (\n" + "	id integer PRIMARY KEY,\n" + "	name text\n"
 				+ " );";
-		String createExpenseTable = "CREATE TABLE IF NOT EXISTS EXPENSE (\n" 
-				+ "	id integer PRIMARY KEY,\n"
-				+ "	userId integer,\n" 
-				+ "	name text,\n" 
-				+ "	category text,\n"
-				+ "	amount real,\n"
-				+ " date text,\n" 
-				+ " FOREIGN KEY(userId) REFERENCES USER(id)\n" + " );";
+		String createExpenseTable = "CREATE TABLE IF NOT EXISTS EXPENSE (\n" + "	id integer PRIMARY KEY,\n"
+				+ "	userId integer,\n" + "	name text,\n" + "	category text,\n" + "	amount real,\n"
+				+ " date text,\n" + " FOREIGN KEY(userId) REFERENCES USER(id)\n" + " );";
 
 		Statement statement = getConnection().createStatement();
 		statement.execute(createUserTable);

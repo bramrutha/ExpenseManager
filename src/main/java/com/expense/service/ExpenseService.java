@@ -4,214 +4,182 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.expense.entity.Expense;
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
+import com.expense.exception.DataBaseException;
 import com.expense.database.DataBaseConnection;
 
-public class ExpenseService extends UserService{
+public class ExpenseService extends UserService {
 
-	private static List<Expense> allList = new ArrayList<Expense>();
-	
-	public static Expense addExpense(int userId, Expense newExpense) throws SQLException, ClassNotFoundException {
-		
-		displayName(newExpense.getUserName());
+	private Connection dbConnection = null;
 
-		Connection dbConnection = null;
-		PreparedStatement preparedStatement = null;
+	private PreparedStatement preparedStatement = null;
 
-		String insertSql = "INSERT INTO Expense" + "(id,userId,name,category,amount,date) VALUES" + "(?,?,?,?,?,?)";
+	private static final String INSERT_QUERY = "INSERT INTO Expense" + "(id,userId,name,category,amount,date) VALUES"
+			+ "(?,?,?,?,?,?)";
+
+	private static final String SELECT_QUERY = "SELECT * FROM EXPENSE WHERE USERID = ?";
+
+	private static final String UPDATE_QUERY = "UPDATE Expense SET name = ?,category =?,amount = ?,date = ?"
+			+ "WHERE USERID = ? AND ID =?";
+
+	private static final String DELETE_QUERY = "DELETE FROM EXPENSE WHERE ID = ?";
+
+	public Expense addExpense(int userId, Expense newExpense) throws DataBaseException {
+
+		// displayName(newExpense.getUserName());
+
 		try {
-
 			dbConnection = DataBaseConnection.getConnection();
-			preparedStatement = dbConnection.prepareStatement(insertSql);
+			preparedStatement = dbConnection.prepareStatement(INSERT_QUERY);
 			preparedStatement.setInt(1, newExpense.getexpenseId());
 			preparedStatement.setInt(2, newExpense.getUserId());
 			preparedStatement.setString(3, newExpense.getName());
 			preparedStatement.setString(4, newExpense.getCategory());
 			preparedStatement.setDouble(5, newExpense.getAmount());
 			preparedStatement.setString(6, newExpense.getDate());
-
 			preparedStatement.executeUpdate();
 
 			System.out.println("Record is inserted into EXPENSE table!");
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		return newExpense;
 
+		} catch (SQLException exception) {
+			throw new DataBaseException("Exception while Expense Insert", exception.getErrorCode());
+		}
+
+		return newExpense;
 	}
 
-	public static List<Expense> getAll(int userId) throws SQLException, ClassNotFoundException {
-		Connection dbConnection = null;
-		PreparedStatement preparedStatement = null;
+	public List<Expense> getAll(int userId) throws DataBaseException {
+
 		List<Expense> expenseList = new ArrayList<Expense>();
 
-		String selectSql = "SELECT * FROM EXPENSE WHERE USERID = ?";
-
 		try {
-
 			dbConnection = DataBaseConnection.getConnection();
-			preparedStatement = dbConnection.prepareStatement(selectSql);
+			preparedStatement = dbConnection.prepareStatement(SELECT_QUERY);
 			preparedStatement.setInt(1, userId);
-			ResultSet rs = preparedStatement.executeQuery();
+			ResultSet resultSet = preparedStatement.executeQuery();
 
-			while (rs.next()) {
-				Expense s1 = new Expense();
-				s1.setexpenseId(rs.getInt("ID"));
-				s1.setUserId(rs.getInt("USERID"));
-				s1.setName(rs.getString("NAME"));
-				s1.setCategory(rs.getString("CATEGORY"));
-				s1.setAmount(rs.getDouble("AMOUNT"));
-				s1.setDate(rs.getString("DATE"));
-				expenseList.add(s1);
+			while (resultSet.next()) {
+				Expense expense = new Expense();
+				expense.setexpenseId(resultSet.getInt("ID"));
+				expense.setUserId(resultSet.getInt("USERID"));
+				expense.setName(resultSet.getString("NAME"));
+				expense.setCategory(resultSet.getString("CATEGORY"));
+				expense.setAmount(resultSet.getDouble("AMOUNT"));
+				expense.setDate(resultSet.getString("DATE"));
+				expenseList.add(expense);
 			}
-
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+		} catch (SQLException exception) {
+			throw new DataBaseException("Exception while Expense Select All", exception.getErrorCode());
 		}
 		return expenseList;
 	}
 
-	public static Map<String, Double> getDayCatExpense(int userId, String fromDate, String toDate)
-			throws ClassNotFoundException, SQLException, java.text.ParseException {
+	public Map<String, Double> getDayCatExpense(int userId, String fromDate, String toDate) throws DataBaseException {
 
 		Map<String, Double> categoryMap = new HashMap<String, Double>();
+		List<Expense> allList = new ArrayList<Expense>();
+		Date fromDateParsed = null;
+		Date toDateParsed = null;
+		String category = null;
 
-		Date fromDate1 = null;
-		Date toDate1 = null;
+		try {
 
-		allList = getAll(userId);
-		Double foodExpense = 0.00;
-		Double shopExpense = 0.00;
-		Double healthExpense = 0.00;
-		Double fuelExpense = 0.00;
-		Double enterExpense = 0.00;
-		Double groceryExpense = 0.00;
-		Double otherExpense = 0.00;
-
-		if (fromDate != null) {
-			fromDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
-			Calendar cal1 = Calendar.getInstance();
-			cal1.setTime(fromDate1);
-		}
-
-		if (toDate != null) {
-			toDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(toDate);
-			Calendar cal2 = Calendar.getInstance();
-			cal2.setTime(toDate1);
-		}
-
-		for (Expense exp : allList) {
-			Date expDate = new SimpleDateFormat("yyyy-MM-dd").parse(exp.getDate());
-			Calendar cal3 = Calendar.getInstance();
-			cal3.setTime(expDate);
+			if (fromDate != null) {
+				fromDateParsed = new SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
+			}
 
 			if (toDate != null) {
-				if (((expDate.equals(fromDate1)) || (expDate.after(fromDate1)))
-						&& ((expDate.equals(toDate1)) || (expDate.before(toDate1)))) {
-					if ((exp.getCategory()).equalsIgnoreCase("FOOD"))
-						foodExpense = foodExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("SHOPPING"))
-						shopExpense = shopExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("HEALTH"))
-						healthExpense = healthExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("FUEL"))
-						fuelExpense = fuelExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("ENTERTAINMET"))
-						enterExpense = enterExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("GROCERY"))
-						groceryExpense = groceryExpense + exp.getAmount();
-					else
-						otherExpense = otherExpense + exp.getAmount();
-				}
-			} else {
-				if (expDate.equals(fromDate1)) {
-					if ((exp.getCategory()).equalsIgnoreCase("FOOD"))
-						foodExpense = foodExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("SHOPPING"))
-						shopExpense = shopExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("HEALTH"))
-						healthExpense = healthExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("FUEL"))
-						fuelExpense = fuelExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("ENTERTAINMET"))
-						enterExpense = enterExpense + exp.getAmount();
-					else if ((exp.getCategory()).equalsIgnoreCase("GROCERY"))
-						groceryExpense = groceryExpense + exp.getAmount();
-					else
-						otherExpense = otherExpense + exp.getAmount();
-				}
-
+				toDateParsed = new SimpleDateFormat("yyyy-MM-dd").parse(toDate);
 			}
+
+			allList = getAll(userId);
+
+			for (Expense expense : allList) {
+				Date expDate = new SimpleDateFormat("yyyy-MM-dd").parse(expense.getDate());
+
+				if (toDate != null) {
+					if (((expDate.equals(fromDateParsed)) || (expDate.after(fromDateParsed)))
+							&& ((expDate.equals(toDateParsed)) || (expDate.before(toDateParsed)))) {
+
+						category = expense.getCategory().toUpperCase();
+						categoryMap = getCategoryExpenses(categoryMap, category, expense);
+					}
+				} else {
+					if (expDate.equals(fromDateParsed)) {
+						category = expense.getCategory().toUpperCase();
+						categoryMap = getCategoryExpenses(categoryMap, category, expense);
+					}
+				}
+			}
+
+		} catch (ParseException exception) {
+			exception.printStackTrace();
 		}
-		categoryMap.put("FOOD", foodExpense);
-		categoryMap.put("SHOPPING", shopExpense);
-		categoryMap.put("HEALTH", healthExpense);
-		categoryMap.put("FUEL", fuelExpense);
-		categoryMap.put("ENTERTAINMENT", enterExpense);
-		categoryMap.put("GROCERY", groceryExpense);
-		categoryMap.put("OTHER", otherExpense);
 		return categoryMap;
 	}
 
-	public static List<Expense> getRangeExpense(int userId, String fromDate, String toDate)
-			throws ClassNotFoundException, SQLException, java.text.ParseException {
+	private Map<String, Double> getCategoryExpenses(Map<String, Double> categoryMap, String category, Expense expense) {
+
+		if (categoryMap.get(category) != null) {
+			categoryMap.put(category.toUpperCase(), categoryMap.get(category) + expense.getAmount());
+			return categoryMap;
+		}
+		categoryMap.put(category.toUpperCase(), expense.getAmount());
+		return categoryMap;
+	}
+
+	public List<Expense> getRangeExpense(int userId, String fromDate, String toDate) throws DataBaseException {
+
 		List<Expense> dateList = new ArrayList<Expense>();
-		Date fromDate1 = null;
-		Date toDate1 = null;
+		List<Expense> allList = new ArrayList<Expense>();
 
-		if (fromDate != null) {
-			fromDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
-			Calendar cal1 = Calendar.getInstance();
-			cal1.setTime(fromDate1);
-		}
+		Date fromDateParsed = null;
+		Date toDateParsed = null;
 
-		if (toDate != null) {
-			toDate1 = new SimpleDateFormat("yyyy-MM-dd").parse(toDate);
-			Calendar cal2 = Calendar.getInstance();
-			cal2.setTime(toDate1);
-		}
-
-		allList = getAll(userId);
-		for (Expense exp : allList) {
-			Date expDate = new SimpleDateFormat("yyyy-MM-dd").parse(exp.getDate());
-			Calendar cal3 = Calendar.getInstance();
-			cal3.setTime(expDate);
+		try {
+			if (fromDate != null) {
+				fromDateParsed = new SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
+			}
 
 			if (toDate != null) {
-				if (((expDate.equals(fromDate1)) || (expDate.after(fromDate1)))
-						&& ((expDate.equals(toDate1)) || (expDate.before(toDate1))))
-
-					dateList.add(exp);
-			} else {
-				if (expDate.equals(fromDate1))
-					dateList.add(exp);
+				toDateParsed = new SimpleDateFormat("yyyy-MM-dd").parse(toDate);
 			}
-		}
 
+			allList = getAll(userId);
+
+			for (Expense expense : allList) {
+				Date expenseDate = new SimpleDateFormat("yyyy-MM-dd").parse(expense.getDate());
+
+				if (toDate != null) {
+					if (((expenseDate.equals(fromDateParsed)) || (expenseDate.after(fromDateParsed)))
+							&& ((expenseDate.equals(toDateParsed)) || (expenseDate.before(toDateParsed))))
+
+						dateList.add(expense);
+				} else {
+					if (expenseDate.equals(fromDateParsed))
+						dateList.add(expense);
+				}
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		return dateList;
 	}
 
-	public static Expense update(int userId, Expense expense) throws ClassNotFoundException {
-
-		Connection dbConnection = null;
-		PreparedStatement preparedStatement = null;
-
-		String updateSql = "UPDATE Expense SET name = ?,category =?,amount = ?,date = ?" + "WHERE USERID = ? AND ID =?";
+	public Expense update(int userId, Expense expense) throws DataBaseException {
 
 		try {
 
 			dbConnection = DataBaseConnection.getConnection();
-			preparedStatement = dbConnection.prepareStatement(updateSql);
+			preparedStatement = dbConnection.prepareStatement(UPDATE_QUERY);
 			preparedStatement.setString(1, expense.getName());
 			preparedStatement.setString(2, expense.getCategory());
 			preparedStatement.setDouble(3, expense.getAmount());
@@ -222,60 +190,28 @@ public class ExpenseService extends UserService{
 			preparedStatement.executeUpdate();
 
 			System.out.println("Record is updated into EXPENSE table!");
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+		} catch (SQLException exception) {
+			throw new DataBaseException("Exception while Expense Update", exception.getErrorCode());
 		}
 		return expense;
 
 	}
 
-	public static void delete(int expenseId) throws ClassNotFoundException {
-		Connection dbConnection = null;
-		PreparedStatement preparedStatement = null;
-
-		String deleteSql = "DELETE FROM EXPENSE WHERE ID = ?";
+	public void delete(int expenseId) throws DataBaseException {
 
 		try {
 
 			dbConnection = DataBaseConnection.getConnection();
-			preparedStatement = dbConnection.prepareStatement(deleteSql);
+			preparedStatement = dbConnection.prepareStatement(DELETE_QUERY);
 			preparedStatement.setInt(1, expenseId);
 
 			preparedStatement.executeUpdate();
 
 			System.out.println("Record is deleted from EXPENSE table!");
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+		} catch (SQLException exception) {
+			throw new DataBaseException("Exception while Expense Delete", exception.getErrorCode());
 		}
 
 	}
 
 }
-
-/*
- * public static boolean validateDate(String strdate) throws
- * java.text.ParseException {
- * 
- * SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd");
- * sdfrmt.setLenient(false); try { Date javaDate = sdfrmt.parse(strdate);
- * System.out.println("strdate : " + strdate); System.out.println("Date : " +
- * sdfrmt.parse(strdate));
- * 
- * } catch (ParseException e) { e.printStackTrace(); return false; } return
- * true; } }
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * }
- * 
- * 
- * //boolean valDate = validateDate(newExpense.getDate()); //List<Expense> list
- * = new LinkedList<Expense>(); //list.add(newExpense); //if (valDate) { // } //
- * else // return list;
- * 
- */

@@ -9,74 +9,55 @@ import java.util.List;
 
 import com.expense.database.DataBaseConnection;
 import com.expense.entity.User;
+import com.expense.exception.DataBaseException;
 
-public class UserService  {
-	
-	public static void displayName(String userName) {
-		
-		System.out.println("Hello "+ userName );
-	}
+public class UserService {
 
-	public static User addUser(User newUser) throws SQLException, ClassNotFoundException {
-		
-		displayName(newUser.getUserName());
-		Connection dbConnection = null;
-		PreparedStatement preparedStatement = null;
+	private Connection dbConnection = null;
 
-		String insertSql = "INSERT INTO User" + "(id,name) VALUES" + "(?,?)";
+	private PreparedStatement preparedStatement = null;
+
+	private static final String INSERT_QUERY = "INSERT INTO User" + "(id,name) VALUES" + "(?,?)";
+
+	private static final String SELECT_QUERY = "SELECT ID,NAME FROM USER";
+
+	public User addUser(User newUser) throws DataBaseException {
+
 		try {
-
 			dbConnection = DataBaseConnection.getConnection();
-			preparedStatement = dbConnection.prepareStatement(insertSql);
+			preparedStatement = dbConnection.prepareStatement(INSERT_QUERY);
 			preparedStatement.setInt(1, newUser.getUserId());
 			preparedStatement.setString(2, newUser.getUserName());
 
 			preparedStatement.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		} 
+		} catch (SQLException exception) {
+			throw new DataBaseException("Exception while User Insert", exception.getErrorCode());
+		}
+
 		return newUser;
 	}
 
-	public static List<User> getAll() throws ClassNotFoundException, SQLException {
+	public List<User> getAll() throws DataBaseException {
 
-		Connection dbConnection = null;
-		PreparedStatement preparedStatement = null;
 		List<User> userList = new ArrayList<User>();
-
-		String selectSql = "SELECT ID,NAME FROM USER";
-
 		try {
 
 			dbConnection = DataBaseConnection.getConnection();
-			preparedStatement = dbConnection.prepareStatement(selectSql);
+			preparedStatement = dbConnection.prepareStatement(SELECT_QUERY);
 
-			ResultSet rs = preparedStatement.executeQuery();
+			ResultSet resultSet = preparedStatement.executeQuery();
 
-
-			while (rs.next()) {
-				User s1 = new User();
-				s1.setUserId(rs.getInt("ID"));
-				s1.setUserName(rs.getString("NAME"));
-				userList.add(s1);
+			while (resultSet.next()) {
+				User user = new User();
+				user.setUserId(resultSet.getInt("ID"));
+				user.setUserName(resultSet.getString("NAME"));
+				userList.add(user);
 			}
-
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		} 
+		} catch (SQLException exception) {
+			throw new DataBaseException("Exception while User Select", exception.getErrorCode());
+		}
 		return userList;
 
 	}
 
 }
-
-/*
- * private static Map<Long,User > userMap = new HashMap<Long, User>();
- * 
- * public static User addUser(User newUser) {
- * userMap.put(newUser.getUserId(),newUser); return
- * userMap.get(newUser.getUserId()); }
- * 
- * public static User getById(long gid) { TODO Auto-generated method stub return
- * userMap.get(gid); } }
- */

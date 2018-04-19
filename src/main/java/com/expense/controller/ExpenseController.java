@@ -1,7 +1,7 @@
 package com.expense.controller;
 
-import java.sql.SQLException;
-import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,76 +16,123 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import com.expense.entity.Expense;
+import com.expense.exception.DataBaseException;
 import com.expense.service.ExpenseService;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("")
 public class ExpenseController {
-
 	
+	ExpenseService expenseService = new ExpenseService();
+
 	@POST
-	@Path("/add/{id}") 
-	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/add/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Expense addExpense(@PathParam("id") int userId,Expense newExpense) throws ClassNotFoundException, SQLException 
-	{
-		return ExpenseService.addExpense(userId,newExpense);
+	public Response addExpense(@PathParam("id") int userId, Expense newExpense) {
+
+		try {			
+			expenseService.addExpense(userId, newExpense);
+			return Response.ok().entity(newExpense).header("Content-Type", MediaType.APPLICATION_JSON).build();
+
+		} catch (DataBaseException e) {
+			System.out.println("Catching SQL Exception");
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage())
+					.header("Content-Type", MediaType.TEXT_PLAIN).build();
+		}
+
 	}
 
-	
 	@GET
-	@Path("/list/{id}")
+	@Path("/list/{userId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Expense> getAll(@PathParam("id") int userId) throws ClassNotFoundException, SQLException {
-		return ExpenseService.getAll(userId);
+	public Response getAll(@PathParam("userId") int userId) {
+		
+		List<Expense> expenseList = new ArrayList<Expense>();
+		
+		try {
+			
+			expenseList = expenseService.getAll(userId);
+			return Response.ok().entity(expenseList).header("Content-Type", MediaType.APPLICATION_JSON).build();
+			
+		} catch (DataBaseException e) {
+			System.out.println("Catching SQL Exception");
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
+					.header("Content-Type", MediaType.TEXT_PLAIN).build();
+		}
+
 	}
-	
+
 	@GET
 	@Path("/list/range")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Expense> getRangeExpense(@QueryParam("id") int userId,
-			@QueryParam("from") String fromDate,@QueryParam("to") String toDate) 
-			                                                            throws ClassNotFoundException, SQLException, ParseException {
-		return ExpenseService.getRangeExpense(userId,fromDate,toDate);
+	public Response getRangeExpense(@QueryParam("id") int userId, @QueryParam("from") String fromDate,
+			@QueryParam("to") String toDate) {
+
+		List<Expense> expenseList = new ArrayList<Expense>();
+		
+		try {
+			expenseList = expenseService.getRangeExpense(userId, fromDate, toDate);
+			return Response.ok().entity(expenseList).header("Content-Type", MediaType.APPLICATION_JSON).build();
+		} catch (DataBaseException e) {
+			System.out.println("Catching SQL Exception");
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
+					.header("Content-Type", MediaType.TEXT_PLAIN).build();
+		}
+
 	}
-	
-	
+
 	@GET
 	@Path("/list/cat")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String,Double> getDayCatExpense(@QueryParam("id") int userId,@QueryParam("from") String fromDate,@QueryParam("to") String toDate) 
-			                                                            throws ClassNotFoundException, SQLException, ParseException {
-		return ExpenseService.getDayCatExpense(userId,fromDate,toDate);
-	}
+	public Response getDayCatExpense(@QueryParam("id") int userId, @QueryParam("from") String fromDate,
+			@QueryParam("to") String toDate) {
+
+		Map<String, Double> categoryMap = new HashMap<String, Double>();
 	
-  	
-    @PUT
+		try {
+			categoryMap = expenseService.getDayCatExpense(userId, fromDate, toDate);
+			return Response.ok().entity(categoryMap).header("Content-Type", MediaType.APPLICATION_JSON).build();
+		} catch (DataBaseException e) {
+			System.out.println("Catching SQL Exception");
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
+					.header("Content-Type", MediaType.TEXT_PLAIN).build();
+		}
+
+	}
+
+	@PUT
 	@Path("/update/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Expense update(@PathParam("id") int userId, Expense expense ) throws ClassNotFoundException{
-		return ExpenseService.update(userId,expense);
-	}
+	public Response update(@PathParam("id") int userId, Expense expense) {
+		
+		try {
+			expenseService.update(userId, expense);
+			return Response.ok().entity(expense).header("Content-Type", MediaType.APPLICATION_JSON).build();
+		} catch (DataBaseException e) {
+			System.out.println("Catching SQL Exception");
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
+					.header("Content-Type", MediaType.TEXT_PLAIN).build();
+		}
 
+	}
 
 	@DELETE
 	@Path("/delete/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON) 
-	public void delete(@PathParam("id") int expenseId) throws ClassNotFoundException {
-		ExpenseService.delete(expenseId);
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response delete(@PathParam("id") int expenseId) {
+		
+		try {
+			expenseService.delete(expenseId);
+			return Response.ok().entity("Delete successful").header("Content-Type", MediaType.APPLICATION_JSON).build();
+		} catch (DataBaseException e) {
+			System.out.println("Catching SQL Exception");
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
+					.header("Content-Type", MediaType.TEXT_PLAIN).build();
+		}
+
 	}
 }
-
-	
-	
-	
-	
-	
-	
-	
-
-
